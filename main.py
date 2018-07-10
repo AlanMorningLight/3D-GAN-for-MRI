@@ -33,7 +33,7 @@ if __name__ == "__main__":
     output_channels = 1
     # input_img_dim = [320, 512, 512]  # z,y,x from sitk image reading convention
     # output_img_dim = [320, 512, 512]  # z,y,x from sitk image reading convention
-    patch_size = [64,64,64]
+    patch_size = [64, 64, 64]
     batch_size = 1
 
     # input & output dims (for channels_last convention)
