@@ -23,21 +23,22 @@ if __name__ == "__main__":
     # ----------------------
 
     # modality to train the generator
-    modality = {'BRAVO', 'BRAVOGd', 'T2', 'GRE', 'DWI', 'DWI2'}
+    modality_table = {'BRAVO': 0, 'T2': 1, 'GRE': 2, 'DWI': 3, 'DWI2': 4}
+    modality = [modality_table['BRAVO'], modality_table['T2'], modality_table['GRE'], modality_table['DWI'], modality_table['DWI2']]
     # path to data
     path = './data/DL_Glioma_80P_2017'
 
     # image dims
     input_channels = len(modality)
     output_channels = 1
-    input_img_dim = [512, 512, 256]
-    output_img_dim = [512, 512, 256]
+    # input_img_dim = [320, 512, 512]  # z,y,x from sitk image reading convention
+    # output_img_dim = [320, 512, 512]  # z,y,x from sitk image reading convention
     patch_size = [64,64,64]
     batch_size = 1
 
     # input & output dims (for channels_last convention)
-    input_dim = [batch_size, input_img_dim[0], input_img_dim[1], input_img_dim[2], input_channels]
-    output_dim = [batch_size, output_img_dim[0], output_img_dim[1], output_img_dim[2], output_channels]
+    input_dim = [batch_size, None, None, None, input_channels]  # z,y,x from sitk image reading convention
+    output_dim = [batch_size, None, None, None, output_channels]
 
     # training params
     lr = 1e-4
@@ -90,8 +91,8 @@ if __name__ == "__main__":
         start = time.time()
         progress_bar = keras_generic_utils.Progbar(n_images_per_epoch)
         # data generator
-        training_generator = data_generator(path, 'training', modality, input_img_dim, batch_size)
-        validation_generator = data_generator(path, 'validation', modality, input_img_dim, batch_size)
+        training_generator = data_generator(path, 'training', modality, batch_size)
+        validation_generator = data_generator(path, 'validation', modality, batch_size)
 
         for batch_i in range(0, n_images_per_epoch, batch_size):
             # load a batch of images for training and validation
@@ -149,8 +150,8 @@ if __name__ == "__main__":
         if batch_counter % 10 == 0:
                 logger.plot_generated_batch(source_images_for_training, target_images_for_training, generator, epoch,
                                             'training', 'png')
-                logger.plot_generated_batch(source_images_for_validation, target_images_for_validation, generator, epoch,
-                                            'validation', 'png')
+                logger.plot_generated_batch(source_images_for_validation, target_images_for_validation, generator,
+                                            epoch, 'validation', 'png')
 
 
 
