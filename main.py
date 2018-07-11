@@ -31,14 +31,15 @@ if __name__ == "__main__":
     # image dims
     input_channels = len(modality)
     output_channels = 1
-    # input_img_dim = [320, 512, 512]  # z,y,x from sitk image reading convention
-    # output_img_dim = [320, 512, 512]  # z,y,x from sitk image reading convention
+    input_img_dim = [320, 512, 512]  # z,y,x from sitk image reading convention
+    output_img_dim = [320, 512, 512]  # z,y,x from sitk image reading convention
+    patch_nb = [4, 8, 8]
     patch_size = [64, 64, 64]
     batch_size = 1
 
     # input & output dims (for channels_last convention)
-    input_dim = [batch_size, None, None, None, input_channels]  # z,y,x from sitk image reading convention
-    output_dim = [batch_size, None, None, None, output_channels]
+    input_dim = [batch_size, input_img_dim[0], input_img_dim[1], input_img_dim[2], input_channels]  # z,y,x from sitk image reading convention
+    output_dim = [batch_size, output_img_dim[0], output_img_dim[1], output_img_dim[2], output_channels]
 
     # training params
     lr = 1e-4
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     dc_gan = DCGAN(generator, discriminator, input_dim, patch_size)
     dc_gan.summary()
 
-    # loss
+    # Total Loss
     loss = ['mae', 'binary_crossentropy']
     loss_weights = [1e2, 1]
     dc_gan.compile(loss=loss, loss_weights=loss_weights, optimizer=opt_DCGAN)
@@ -91,8 +92,8 @@ if __name__ == "__main__":
         start = time.time()
         progress_bar = keras_generic_utils.Progbar(n_images_per_epoch)
         # data generator
-        training_generator = data_generator(path, 'training', modality, batch_size)
-        validation_generator = data_generator(path, 'validation', modality, batch_size)
+        training_generator = data_generator(path, 'training', modality, input_dim)
+        validation_generator = data_generator(path, 'validation', modality, input_dim)
 
         for batch_i in range(0, n_images_per_epoch, batch_size):
             # load a batch of images for training and validation
@@ -112,7 +113,7 @@ if __name__ == "__main__":
 
             # train the GAN
             gan_labels = np.zeros(target_images_for_training.shape[0], 2)
-            gan_labels[:, 1] = 1  # they are all fake images since they come fot the generator
+            gan_labels[:, 1] = 1  # they are all fake images since they come from the generator
             gan_loss = dc_gan.train_on_batch(source_images_for_training, [target_images_for_training, gan_labels])
 
             # unfreeze the discriminator

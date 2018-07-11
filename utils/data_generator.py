@@ -33,8 +33,11 @@ def test_data_generator(dir, data_type, modality, input_dim):
     return source_img, target_img
 
 
-def data_generator(dir, data_type, modality, batch_size):
+def data_generator(dir, data_type, modality, input_dim):
     # data_type：training, testing, or validation
+
+    batch_size = input_dim[0]
+    input_img_dim = input_dim[1:4]
 
     # inverse_table = {v:k for k,v in modality_table.items()}
     inverse_table = {0: 'BRAVO.nii', 1: 'corT2.nii', 2: 'corGRE.nii', 3: 'corDWI.nii', 4: 'corDWI2.nii'}
@@ -61,4 +64,4 @@ def data_generator(dir, data_type, modality, batch_size):
 
 if __name__ == '__main__':
     s, t = test_data_generator('/media/jiang/Elements/liujiangdata/DL_Glioma_500P_2017/NIFTII/', 'training', [0, 1, 2],
-                               1)
+                               [1,320,512,512,3])

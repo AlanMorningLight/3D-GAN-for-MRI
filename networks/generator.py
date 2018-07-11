@@ -17,7 +17,7 @@ def UNetGenerator(input_dim, output_channels, depth=4, nb_base_filters=32, batch
     # build network
     # -------------------
 
-    inputs = Input(input_dim)
+    inputs = Input(batch_shape=input_dim)
     current_layer = inputs
     levels = list()
 
