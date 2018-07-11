@@ -21,7 +21,7 @@ def PatchGanDiscriminator(output_dim, patch_size, nb_patches, padding='same', st
     for i, filter_size in enumerate(filter_list[1:]):
         name = 'disc_conv_{}'.format(i+1)
         disc_out = Conv3D(name=name, filters=filter_list[0], kernel_size=kernel_size, padding=padding, strides=strides)(disc_out)
-        disc_out = BatchNormalization(name=name+'_bn', axis=)(disc_out)
+        disc_out = BatchNormalization(name=name+'_bn', axis=4)(disc_out)
         disc_out = LeakyReLU(alpha=0.2)(disc_out)
     if mini_batch_discrimination:
     # -----------------------------------------------

@@ -12,6 +12,29 @@ def num_patches(output_dim, patch_size):
 
 
 def get_patches(source_images_for_training, target_images_for_training, generator, batch_counter, patch_size):
-    patch_images = 0
-    patch_labels = 0
+    # generate fake image for even batch_counter
+    if batch_counter % 2 == 0:
+        image = generator.predict(source_images_for_training)
+        patch_labels = np.zeros((image.shape[0], 2), dtype=np.unit8)
+        patch_labels[:, 0] = 1  # set the first column to 1 because they are fake image
+    else:
+        image = target_images_for_training
+        patch_labels = np.zeros((image.shape[0], 2), dtype=np.unit8)
+        patch_labels[:, 1] = 1  # set the first column to 1 because they are real image
+
+    input_dim = source_images_for_training.shape
+    z, y, x = input_dim[1:4]
+    pz, py, px = patch_size[:]
+
+    list_z_idx = [(i * pz, (i + 1) * pz) for i in range(int(z / pz))]
+    list_y_idx = [(i * py, (i + 1) * py) for i in range(int(y / py))]
+    list_x_idx = [(i * px, (i + 1) * px) for i in range(int(x / px))]
+
+    patch_images = []
+    for z_idx in list_z_idx:
+        for y_idx in list_y_idx:
+            for x_idx in list_x_idx:
+                patch = image[:, z_idx[0]:z_idx[1], y_idx[0]:y_idx[1], x_idx[0]:x_idx[1], :]
+                patch_images.append(np.asarray(patch, dtype=np.float32))
     return patch_images, patch_labels
+
