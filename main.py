@@ -2,7 +2,7 @@ from utils import patch_utils
 from utils import data_generator
 from utils import logger
 from networks.generator import UNetGenerator
-from networks.discriminator import PatchGANDiscriminator
+from networks.discriminator import PatchGanDiscriminator
 from networks.DCGAN import DCGAN
 from keras.optimizers import Adam
 from keras.utils import generic_utils as keras_generic_utils
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     # Patch GAN Discriminator
     nb_patches, patch_gan_dim = patch_utils.num_patches(output_dim, patch_size)
-    discriminator = PatchGANDiscriminator(output_img_dim, patch_gan_dim, nb_patches)
+    discriminator = PatchGanDiscriminator(output_img_dim, patch_gan_dim, nb_patches)
     discriminator.summary()
     discriminator.trainable = False
 

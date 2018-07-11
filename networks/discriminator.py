@@ -1,42 +1,46 @@
-import numpy as np
+# import numpy as np
 from keras.engine import Input, Model
-from keras.layers import Conv3D, MaxPooling3D, UpSampling3D, Activation, BatchNormalization, Deconvolution3D
-from keras.layers.merge import concatenate
-from keras_contrib.layers.normalization import InstanceNormalization
+from keras.layers import Conv3D, Flatten, Dense, BatchNormalization
+# from keras.layers.merge import concatenate
+# from keras_contrib.layers.normalization import InstanceNormalization
 from keras.layers.advanced_activations import LeakyReLU
 
-def PatchGanDiscriminator(output_dim, patch_size, nb_patches, padding='same', strides=(1,1,1), kernel_size=(3,3,3)):
-    """
-    # -------------------------------
-    # DISCRIMINATOR
-    # C64-C128-C256-C512-C512-C512 (for 256x256)
-    # otherwise, it scales from 64
-    # 1 layer block = Conv - BN - LeakyRelu
-    # -------------------------------
-    """
-
-    inputs = Input(shape=patch_size)
+def PatchGanDiscriminator(output_dim, patch_size, nb_patches, padding='same', strides=(1,1,1), kernel_size=(3,3,3),
+                          mini_batch_discrimination=False):
+    # output_dim = [samples, z, y, x, channels]
+    # patch_size = [z,y,x]
+    inputs = Input(shape=[patch_size[0], patch_size[1], patch_size[2], output_dim[4]])
     filter_list = [64, 128, 256, 512, 512, 512]
-    nb_layers = len(filter_list)
 
     # Layer1 without Batch Normalization
     disc_out = Conv3D(filters=filter_list[0], kernel_size=kernel_size, padding=padding, strides=strides)(inputs)
     disc_out = LeakyReLU(disc_out)
 
-    # Build the rest Layers
-    for
+    # build the rest Layers
+    # Conv -> BN -> LeakyReLU
+    for i, filter_size in enumerate(filter_list[1:]):
+        name = 'disc_conv_{}'.format(i+1)
+        disc_out = Conv3D(name=name, filters=filter_list[0], kernel_size=kernel_size, padding=padding, strides=strides)(disc_out)
+        disc_out = BatchNormalization(name=name+'_bn', axis=)(disc_out)
+        disc_out = LeakyReLU(alpha=0.2)(disc_out)
+    if mini_batch_discrimination:
+    # -----------------------------------------------
+    # build patch GAN with mini-batch discrimination
+    # -----------------------------------------------
+        patch_GAN_discriminator = generate_patch_gan_loss(last_disc_conv_layer=disc_out,
+                                                      patch_dim=patch_size,
+                                                      input_layer=inputs,
+                                                      nb_patches=nb_patches)
+    else:
+        x_flat = Flatten()(disc_out)
+        x = Dense(2, activation='softmax',name="disc_dense")(x_flat)
+        patch_GAN_discriminator = Model(input=inputs, output=x, name="patch_gan")
+    return patch_GAN_discriminator
 
 
-    return
+# to be implemented:
+def generate_patch_gan_loss(last_disc_conv_layer, patch_size, input_layer, nb_patches):
+    list_input = [Input(shape=[patch_size[0], patch_size[1], patch_size[2], 1])]
+    x_flat = Flatten()(last_disc_conv_layer)
 
-def create_convolution_block(input_layer, n_filters, batch_normalization=False, kernel_size=(3, 3, 3), activation='relu',
-                             padding='same', strides=(1, 1, 1), instance_normalization=False):
-    # 3DConv + Normalization + Activation
-    # Instance Normalization is said to perform better than Batch Normalization
-
-    layer = Conv3D(n_filters, kernel_size, padding=padding, strides=strides)(input_layer)
-    if batch_normalization:
-        layer = BatchNormalization(axis=4)(layer)  # channel_last convention
-    elif instance_normalization:
-        layer = InstanceNormalization(axis=4)(layer)
-    return Activation(activation)(layer)
+    return 0
