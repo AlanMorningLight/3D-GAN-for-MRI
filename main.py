@@ -6,11 +6,24 @@ from networks.discriminator import PatchGanDiscriminator
 from networks.DCGAN import DCGAN
 from keras.optimizers import Adam
 from keras.utils import generic_utils as keras_generic_utils
+# from keras.callbacks import TensorBoard
 import os
 import time
 import numpy as np
-
+import tensorflow as tf
 # import argparse
+
+
+# record training log
+def write_log(callback, names, logs, batch_no):
+    for name, value in zip(names, logs):
+        summary = tf.Summary()
+        summary_value = summary.value.add()
+        summary_value.simple_value = value
+        summary_value.tag = name
+        callback.writer.add_summary(summary, batch_no)
+        callback.writer.flush()
+
 
 if __name__ == "__main__":
     # parser = argparse.ArgumentParser()
@@ -63,7 +76,7 @@ if __name__ == "__main__":
 
     # Patch GAN Discriminator
     nb_patches, patch_gan_dim = patch_utils.num_patches(output_dim, patch_size)
-    discriminator = PatchGanDiscriminator(output_img_dim, patch_gan_dim, nb_patches)
+    discriminator = PatchGanDiscriminator(output_dim, patch_size, nb_patches)
     discriminator.summary()
     discriminator.trainable = False
 
@@ -79,6 +92,15 @@ if __name__ == "__main__":
     discriminator.trainable = True
     discriminator.compile(loss='binary_crossentropy', optimizer=opt_discriminator)
 
+    # -------------------
+    # set up tensorboard
+    # -------------------
+
+    # log_path = './logs'
+    # callback = TensorBoard(log_path)
+    # callback.set_model(dc_gan)
+
+
     # ----------------------
     # train
     # ----------------------
@@ -86,15 +108,16 @@ if __name__ == "__main__":
     nb_epoch = 100
     n_images_per_epoch = 400
     print("Start training..")
+
+    # data generator
+    training_generator = data_generator(path, 'training', modality, input_dim)
+    validation_generator = data_generator(path, 'validation', modality, input_dim)
+
     for epoch in range(0, nb_epoch):
         print('Epoch {}'.format(epoch))
         batch_counter = 1
         start = time.time()
         progress_bar = keras_generic_utils.Progbar(n_images_per_epoch)
-        # data generator
-        training_generator = data_generator(path, 'training', modality, input_dim)
-        validation_generator = data_generator(path, 'validation', modality, input_dim)
-
         for batch_i in range(0, n_images_per_epoch, batch_size):
             # load a batch of images for training and validation
             source_images_for_training, target_images_for_training = next(training_generator)

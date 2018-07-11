@@ -5,7 +5,7 @@ from keras.layers import Conv3D, Flatten, Dense, BatchNormalization
 # from keras_contrib.layers.normalization import InstanceNormalization
 from keras.layers.advanced_activations import LeakyReLU
 
-def PatchGanDiscriminator(output_dim, patch_size, nb_patches, padding='same', strides=(1,1,1), kernel_size=(3,3,3),
+def PatchGanDiscriminator(output_dim, patch_size, nb_patches, padding='same', strides=(2,2,2), kernel_size=(3,3,3),
                           mini_batch_discrimination=False):
     # output_dim = [samples, z, y, x, channels]
     # patch_size = [z,y,x]
@@ -14,13 +14,13 @@ def PatchGanDiscriminator(output_dim, patch_size, nb_patches, padding='same', st
 
     # Layer1 without Batch Normalization
     disc_out = Conv3D(filters=filter_list[0], kernel_size=kernel_size, padding=padding, strides=strides)(inputs)
-    disc_out = LeakyReLU(disc_out)
+    disc_out = LeakyReLU(alpha=0.2)(disc_out)
 
     # build the rest Layers
     # Conv -> BN -> LeakyReLU
     for i, filter_size in enumerate(filter_list[1:]):
         name = 'disc_conv_{}'.format(i+1)
-        disc_out = Conv3D(name=name, filters=filter_list[0], kernel_size=kernel_size, padding=padding, strides=strides)(disc_out)
+        disc_out = Conv3D(name=name, filters=filter_list[i+1], kernel_size=kernel_size, padding=padding, strides=strides)(disc_out)
         disc_out = BatchNormalization(name=name+'_bn', axis=4)(disc_out)
         disc_out = LeakyReLU(alpha=0.2)(disc_out)
     if mini_batch_discrimination:
